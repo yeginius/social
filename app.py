@@ -3,6 +3,10 @@ from gtts import gTTS
 from datetime import datetime
 import requests
 from bs4 import BeautifulSoup
+<<<<<<< HEAD
+=======
+import os
+>>>>>>> ff69e3c (Update app.py for Render port fix)
 
 app = Flask(__name__)
 
@@ -14,15 +18,22 @@ def home():
 def social_news():
     titles = get_social_news_titles()
     news_text = create_announcement(titles)
+<<<<<<< HEAD
     
     # gTTS로 음성 생성
+=======
+
+>>>>>>> ff69e3c (Update app.py for Render port fix)
     tts = gTTS(text=news_text, lang='ko')
     filename = "news.mp3"
     tts.save(filename)
 
     return send_file(filename, mimetype="audio/mpeg")
 
+<<<<<<< HEAD
 # 아래는 뉴스 수집 로직
+=======
+>>>>>>> ff69e3c (Update app.py for Render port fix)
 def get_social_news_titles(max_count=10):
     url = "https://news.naver.com/main/list.naver?mode=LSD&mid=sec&sid1=102"
     headers = {"User-Agent": "Mozilla/5.0"}
@@ -56,8 +67,14 @@ def create_announcement(titles):
             announcement += f"마지막으로, {number_words[idx-1]} 소식, {title} 이상입니다."
         else:
             announcement += f"{number_words[idx-1]} 소식, {title}, "
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> ff69e3c (Update app.py for Render port fix)
     return announcement
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000)
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
+
