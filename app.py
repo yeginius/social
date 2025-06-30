@@ -7,17 +7,29 @@ import os
 
 app = Flask(__name__)
 
-@app.route("/")
-def home():
-    return "사회 뉴스 속보 서버 작동 중입니다. /social 경로로 접근하세요."
-
 @app.route("/social")
 def social_news():
     titles = get_social_news_titles()
-    news_text = create_announcement(titles)
+    now = datetime.utcnow() + timedelta(hours=9)
+    current_time = now.strftime("%H시 %M분")
 
-    # TTS 생성 (속도 빠르게: gTTS는 속도 조정 불가 → 이후 변환 필요)
-    tts = gTTS(text=news_text, lang='ko')
+    number_words = [
+        "첫번째", "두번째", "세번째", "네번째", "다섯번째",
+        "여섯번째", "일곱번째", "여덟번째", "아홉번째", "열번째"
+    ]
+
+    if not titles:
+        news_text = f"현재 시간 {current_time} 기준 사회 뉴스 속보가 없습니다."
+    else:
+        news_text = f"현재 시간 {current_time} 기준 사회 뉴스 속보 탑텐입니다. "
+        for idx, title in enumerate(titles, 1):
+            if idx == len(titles):
+                news_text += f"마지막으로, {number_words[idx-1]} 소식, {title} 이상입니다."
+            else:
+                news_text += f"{number_words[idx-1]} 소식, {title}, "
+
+    # gTTS 음성 생성
+    tts = gTTS(text=news_text.strip(), lang='ko')
     filename = "news.mp3"
     tts.save(filename)
 
@@ -39,28 +51,10 @@ def get_social_news_titles(max_count=10):
             break
     return titles
 
-def create_announcement(titles):
-    # 한국 시간 기준
-    now = datetime.utcnow() + timedelta(hours=9)
-    current_time = now.strftime("%H시 %M분")
-
-    if not titles:
-        return f"현재 시간 {current_time} 기준 사회 뉴스 속보가 없습니다."
-
-    number_words = [
-        "첫번째", "두번째", "세번째", "네번째", "다섯번째",
-        "여섯번째", "일곱번째", "여덟번째", "아홉번째", "열번째"
-    ]
-
-    announcement = f"현재 시간 {current_time} 기준 사회 뉴스 속보 탑텐입니다. "
-    for idx, title in enumerate(titles, 1):
-        if idx == len(titles):
-            announcement += f"마지막으로, {number_words[idx-1]} 소식, {title} 이상입니다."
-        else:
-            announcement += f"{number_words[idx-1]} 소식, {title}, "
-    return announcement
+@app.route("/")
+def home():
+    return "사회 뉴스 속보 서버 작동 중입니다. '/social'로 접속 시 음성 뉴스가 재생됩니다."
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
-
