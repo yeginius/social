@@ -1,11 +1,26 @@
-from flask import Flask, send_file
-from gtts import gTTS
+from flask import Flask, Response
 from datetime import datetime, timedelta
 import requests
 from bs4 import BeautifulSoup
 import os
 
 app = Flask(__name__)
+
+def get_social_news_titles(max_count=10):
+    url = "https://news.naver.com/main/list.naver?mode=LSD&mid=sec&sid1=102"
+    headers = {"User-Agent": "Mozilla/5.0"}
+    res = requests.get(url, headers=headers)
+    soup = BeautifulSoup(res.text, "html.parser")
+
+    articles = soup.select("ul.type06_headline li dt:not(.photo) a")
+    titles = []
+    for article in articles:
+        title = article.get_text(strip=True)
+        if title not in titles:
+            titles.append(title)
+        if len(titles) == max_count:
+            break
+    return titles
 
 @app.route("/social")
 def social_news():
@@ -28,32 +43,11 @@ def social_news():
             else:
                 news_text += f"{number_words[idx-1]} 소식, {title}, "
 
-    # gTTS 음성 생성
-    tts = gTTS(text=news_text.strip(), lang='ko')
-    filename = "news.mp3"
-    tts.save(filename)
-
-    return send_file(filename, mimetype="audio/mpeg")
-
-def get_social_news_titles(max_count=10):
-    url = "https://news.naver.com/main/list.naver?mode=LSD&mid=sec&sid1=102"
-    headers = {"User-Agent": "Mozilla/5.0"}
-    res = requests.get(url, headers=headers)
-    soup = BeautifulSoup(res.text, "html.parser")
-
-    articles = soup.select("ul.type06_headline li dt:not(.photo) a")
-    titles = []
-    for article in articles:
-        title = article.get_text(strip=True)
-        if title not in titles:
-            titles.append(title)
-        if len(titles) == max_count:
-            break
-    return titles
+    return Response(news_text.strip(), mimetype="text/plain")
 
 @app.route("/")
 def home():
-    return "사회 뉴스 속보 서버 작동 중입니다. '/social'로 접속 시 음성 뉴스가 재생됩니다."
+    return "사회 뉴스 속보 서버 작동 중입니다. '/social'로 접속하면 최신 뉴스 텍스트를 받아볼 수 있습니다."
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
